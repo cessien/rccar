@@ -51,9 +51,9 @@ def setup():
     GPIO.setup(37, GPIO.OUT) # Connected to PWMA, GPIO 26
     GPIO.setup(11, GPIO.OUT) # Connected to AIN2, GPIO 17 
     GPIO.setup(12, GPIO.OUT) # Connected to AIN1, GPIO 18
-    GPIO.setup(22, GPIO.OUT) # Connected to STBY, GPIO 25
+    GPIO.setup(16, GPIO.OUT) # Connected to STBY, GPIO 23
     GPIO.setup(15, GPIO.OUT) # Connected to BIN1, GPIO 22
-    GPIO.setup(16, GPIO.OUT) # Connected to BIN2, GPIO 23
+    GPIO.setup(22, GPIO.OUT) # Connected to BIN2, GPIO 25
     GPIO.setup(18, GPIO.OUT) # Connected to PWMB, GPIO 24
     GPIO.setup(33, GPIO.OUT) # Connected to SERVO, GPIO 13
     time.sleep(1)

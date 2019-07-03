@@ -62,7 +62,7 @@ def setup():
     GPIO.output(11, GPIO.LOW) # Set AIN2
     # Motor B:
     GPIO.output(15, GPIO.HIGH) # Set BIN1
-    GPIO.output(16, GPIO.LOW) # Set BIN2
+    GPIO.output(22, GPIO.LOW) # Set BIN2
     global pa
     global pb
     # Motor A (chip 1):

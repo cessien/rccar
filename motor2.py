@@ -36,7 +36,7 @@ def drive(s = 0):
     pa.ChangeDutyCycle(s)
     pb.ChangeDutyCycle(s)
     # Disable STBY (standby)
-    GPIO.output(13, GPIO.HIGH)
+    GPIO.output(16, GPIO.HIGH)
 
 def turn(a = 90):
     t = 5 + 5 * a / 180

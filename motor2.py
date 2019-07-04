@@ -10,6 +10,7 @@ import struct
 import sys
 import argparse
 import json
+from evdev import InputDevice, categorize, ecodes
 
 try:
         import RPi.GPIO as GPIO
@@ -20,6 +21,10 @@ parser = argparse.ArgumentParser(description='rc car motor controller')
 parser.add_argument('--debug', dest='debug', action='store_true', help='max motors on a timer')
 
 args = parser.parse_args()
+
+gamepad = InputDevice('/dev/input/event0')
+
+rTgr = 311 
 
 def setup_multicast():
     multicast_group = '230.0.0.0'
@@ -89,12 +94,29 @@ def receive_multicast():
     global speed
     global angle
     while True:
-        data, address = sock.recvfrom(1024)
-        j = json.loads(data.decode("utf-8"))
+        #data, address = sock.recvfrom(1024)
+        #j = json.loads(data.decode("utf-8"))
         #print("data: " + data.decode("utf-8"))
+        tempSpeed = speed
+        tempAngle = angle
+        for event in gamepad.read_loop():
+            if event.type == ecodes.EV_ABS:
+                absevent = categorize(event)
+                #print(ecodes.bytype[absevent.event.type][absevent.event.code], absevent.event.value)
+                if ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Y":
+                    tempSpeed = 100 - (absevent.event.value - 8300) / ( 59000 - 8300 ) * 100
+                    print('speed: ',tempSpeed)
+                elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_X":
+                    tempAngle = (absevent.event.value - 4300) / ( 53000 - 4300 ) * 180
+                    print('angle: ',tempAngle)
+
         with drive_lock:
-            speed = int(j['speed'])
-            angle = int(j['angle'])
+            print(tempSpeed)
+            speed = math.floor(tempSpeed)
+            angle = math.floor(tempAngle)
+            #speed = int(j['speed'])
+            #angle = int(j['angle'])
+        sleep(.1)
     return
 
 
@@ -111,7 +133,6 @@ multicast_thread.daemon = True
 multicast_thread.start()
 
 signal.signal(signal.SIGINT, signal_handler)
-#signal.pause()
 
 # Wait 5 seconds on debugger mode
 remaining = 100

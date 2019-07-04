@@ -58,8 +58,8 @@ def setup():
     GPIO.setup(33, GPIO.OUT) # Connected to SERVO, GPIO 13
     time.sleep(1)
     # Motor A:
-    GPIO.output(12, GPIO.HIGH) # Set AIN1
-    GPIO.output(11, GPIO.LOW) # Set AIN2
+    GPIO.output(12, GPIO.LOW) # Set AIN1
+    GPIO.output(11, GPIO.HIGH) # Set AIN2
     # Motor B:
     GPIO.output(15, GPIO.HIGH) # Set BIN1
     GPIO.output(22, GPIO.LOW) # Set BIN2

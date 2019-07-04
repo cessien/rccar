@@ -4,6 +4,7 @@
 import threading
 from queue import Queue
 import time
+import math
 import signal
 import socket
 import struct
@@ -97,26 +98,29 @@ def receive_multicast():
         #data, address = sock.recvfrom(1024)
         #j = json.loads(data.decode("utf-8"))
         #print("data: " + data.decode("utf-8"))
-        tempSpeed = speed
-        tempAngle = angle
-        for event in gamepad.read_loop():
-            if event.type == ecodes.EV_ABS:
-                absevent = categorize(event)
-                #print(ecodes.bytype[absevent.event.type][absevent.event.code], absevent.event.value)
-                if ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Y":
-                    tempSpeed = 100 - (absevent.event.value - 8300) / ( 59000 - 8300 ) * 100
-                    print('speed: ',tempSpeed)
-                elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_X":
-                    tempAngle = (absevent.event.value - 4300) / ( 53000 - 4300 ) * 180
-                    print('angle: ',tempAngle)
+        drive_lock.acquire()
+        try:
+            events = 0
+            for event in gamepad.read_loop():
+                if event.type == ecodes.EV_ABS:
+                    absevent = categorize(event)
+                    #print(ecodes.bytype[absevent.event.type][absevent.event.code], absevent.event.value)
+                    if ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Y":
+                        speed = math.floor(100 - (absevent.event.value - 8300) / ( 59000 - 8300 ) * 100)
+                        print('speed: ',speed)
+                        events += 1
+                    elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_X":
+                        angle = math.floor((absevent.event.value - 4300) / ( 53000 - 4300 ) * 180)
+                        print('angle: ',angle)
+                        events += 1
+                if events > 3:
+                    break # too many events geeze
+        finally:
+            drive_lock.release()
 
-        with drive_lock:
-            print(tempSpeed)
-            speed = math.floor(tempSpeed)
-            angle = math.floor(tempAngle)
-            #speed = int(j['speed'])
-            #angle = int(j['angle'])
-        sleep(.1)
+        print(speed)
+        #speed = int(j['speed'])
+        #angle = int(j['angle'])
     return
 
 
@@ -136,19 +140,17 @@ signal.signal(signal.SIGINT, signal_handler)
 
 # Wait 5 seconds on debugger mode
 remaining = 100
-global speed
-global old_speed
-global angle
-global old_angle
 old_speed = 0
 old_angle = 90
+speed = 0
 
 if args.debug:
-   speed = 100
+    speed = 100
 while not args.debug or args.debug and remaining > 0:
-    with drive_lock:
-        global old_speed
-        global old_angle
+    print("debug")
+    drive_lock.acquire()
+    try:
+        print(angle,"<>",speed)
         if old_speed != speed:
             drive(speed)
             print("speed: " + str(speed) + ", angle: " + str(angle))
@@ -157,6 +159,8 @@ while not args.debug or args.debug and remaining > 0:
             turn(angle)
             print("speed: " + str(speed) + ", angle: " + str(angle))
             old_angle = angle
+    finally:
+        drive_lock.release()
     if args.debug: print("remaining time: " + str(remaining / 10))
     time.sleep(.1)
     if args.debug: remaining-=1

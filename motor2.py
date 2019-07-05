@@ -37,7 +37,7 @@ def setup_multicast():
     mreq = struct.pack('4sL', group, socket.INADDR_ANY)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-def drive(s = 0):
+def drive(s = 49):
     if s > 43 and s < 55:
         s = 0
     elif s <= 43:
@@ -61,13 +61,19 @@ def drive(s = 0):
     GPIO.output(16, GPIO.HIGH)
 
 def turn(a = 90):
-    t = 5 + 5 * a / 180
-
+    a = alignment(a)
+    t = 6 + 3 * a / 180
     #a = 7.5 if a >=7 and a <=8 else a 
 
-    a = round(t,1)
+    t = round(t,1)
     # Set the turn angle
     servo.ChangeDutyCycle(t)
+
+def alignment(a):
+    a = a + 50
+    a = 0 if a < 0 else a
+    a = 180 if a > 180 else a
+    return a
 
 def setup():
     print(GPIO.RPI_INFO)
@@ -129,10 +135,9 @@ def receive_multicast():
                         speed = math.floor(100 - (absevent.event.value - 8300) / ( 59000 - 8300 ) * 100)
                         events += 1
                     elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_RX":
-                        angle = math.floor((absevent.event.value - 4300) / ( 53000 - 4300 ) * 180)
-                        print('angle: ',angle)
+                        angle = 180 - math.floor((absevent.event.value - 4300) / ( 53000 - 4300 ) * 180)
                         events += 1
-                if events > 3:
+                if events > 10:
                     break # too many events geeze
         finally:
             drive_lock.release()

@@ -62,8 +62,12 @@ def drive(s = 0):
 
 def turn(a = 90):
     t = 5 + 5 * a / 180
+
+    #a = 7.5 if a >=7 and a <=8 else a 
+
+    a = round(t,1)
     # Set the turn angle
-    #servo.ChangeDutyCycle(t)
+    servo.ChangeDutyCycle(t)
 
 def setup():
     print(GPIO.RPI_INFO)
@@ -96,7 +100,7 @@ def setup():
 
     global servo
     servo = GPIO.PWM(33, 50)
-    #servo.start(12.5)
+    servo.start(7.5)
 
 def cleanup():
     print("cleaning up")
@@ -124,7 +128,7 @@ def receive_multicast():
                     if ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Y":
                         speed = math.floor(100 - (absevent.event.value - 8300) / ( 59000 - 8300 ) * 100)
                         events += 1
-                    elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_X":
+                    elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_RX":
                         angle = math.floor((absevent.event.value - 4300) / ( 53000 - 4300 ) * 180)
                         print('angle: ',angle)
                         events += 1

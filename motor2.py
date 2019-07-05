@@ -38,6 +38,22 @@ def setup_multicast():
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 def drive(s = 0):
+    if s > 43 and s < 55:
+        s = 0
+    elif s <= 43:
+        # Reverse
+        GPIO.output(12, GPIO.HIGH) # Set AIN1
+        GPIO.output(11, GPIO.LOW) # Set AIN2
+        s = math.floor(100 - s/43 * 100)
+    else:
+        # Forward
+        GPIO.output(12, GPIO.LOW) # Set AIN1
+        GPIO.output(11, GPIO.HIGH) # Set AIN2
+        s = math.floor((s - 55)/55 * 100 )
+
+    s =  100 if s > 100 else  s
+    s =  0   if s < 0   else s
+
     # Set the motor speed
     pa.ChangeDutyCycle(s)
     pb.ChangeDutyCycle(s)
@@ -47,7 +63,7 @@ def drive(s = 0):
 def turn(a = 90):
     t = 5 + 5 * a / 180
     # Set the turn angle
-    servo.ChangeDutyCycle(t)
+    #servo.ChangeDutyCycle(t)
 
 def setup():
     print(GPIO.RPI_INFO)
@@ -80,7 +96,7 @@ def setup():
 
     global servo
     servo = GPIO.PWM(33, 50)
-    servo.start(12.5)
+    #servo.start(12.5)
 
 def cleanup():
     print("cleaning up")
@@ -107,7 +123,6 @@ def receive_multicast():
                     #print(ecodes.bytype[absevent.event.type][absevent.event.code], absevent.event.value)
                     if ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_Y":
                         speed = math.floor(100 - (absevent.event.value - 8300) / ( 59000 - 8300 ) * 100)
-                        print('speed: ',speed)
                         events += 1
                     elif ecodes.bytype[absevent.event.type][absevent.event.code] == "ABS_X":
                         angle = math.floor((absevent.event.value - 4300) / ( 53000 - 4300 ) * 180)
@@ -118,7 +133,6 @@ def receive_multicast():
         finally:
             drive_lock.release()
 
-        print(speed)
         #speed = int(j['speed'])
         #angle = int(j['angle'])
     return
@@ -147,10 +161,8 @@ speed = 0
 if args.debug:
     speed = 100
 while not args.debug or args.debug and remaining > 0:
-    print("debug")
     drive_lock.acquire()
     try:
-        print(angle,"<>",speed)
         if old_speed != speed:
             drive(speed)
             print("speed: " + str(speed) + ", angle: " + str(angle))
